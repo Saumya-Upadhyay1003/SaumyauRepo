@@ -7,7 +7,7 @@ from scipy.io.wavfile import write
 import time
 import matplotlib.pyplot as plt
 
-# ✅ Secure API key from Streamlit Secrets
+# ✅ Get API key from Streamlit secrets (never hardcode it)
 client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Initialize session state
@@ -27,7 +27,7 @@ st.subheader("📄 Paste Your Resume Summary:")
 resume_input = st.text_area("This will be used to generate personalized interview questions.", height=200)
 start_button = st.button("🚀 Start Interview")
 
-# Step 2: Generate Questions
+# Step 2: Generate Interview Questions
 if start_button:
     if not resume_input.strip():
         st.warning("Please paste a resume summary to start.")
@@ -38,7 +38,7 @@ if start_button:
 
         Resume Summary: {resume_input}
 
-        Make the questions progressively deeper (e.g., roadmap → metrics → collaboration → failures → innovation). Return them as a numbered list.
+        Make the questions increasingly deep. Return them as a numbered list.
         """
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -59,8 +59,8 @@ if st.session_state.interview_started and st.session_state.question_index < len(
     st.subheader(f"🧠 Question {st.session_state.question_index + 1}:")
     st.write(current_q)
 
-    fs = 16000         # Sample rate (optimized for Whisper)
-    duration = 150     # 2.5 minutes = 150 seconds
+    fs = 16000         # Whisper-optimized sample rate
+    duration = 150     # 2.5 minutes in seconds
 
     st.markdown("🎙️ Click to record your answer (max 2.5 minutes).")
 
@@ -80,13 +80,13 @@ if st.session_state.interview_started and st.session_state.question_index < len(
             write(temp_path, fs, recording)
             st.success("Recording complete.")
 
-            # Display waveform
+            # Waveform plot
             fig, ax = plt.subplots()
             ax.plot(recording)
             ax.set_title("🎧 Your Recorded Audio Waveform")
             st.pyplot(fig)
 
-            # Transcribe
+            # Transcription
             st.info("Transcribing your answer...")
             with open(temp_path, "rb") as audio_file:
                 transcript = client.audio.transcriptions.create(
@@ -99,13 +99,13 @@ if st.session_state.interview_started and st.session_state.question_index < len(
             st.subheader("📝 Your Answer:")
             st.write(answer)
 
-            # GPT Feedback with rating out of 10
+            # GPT Feedback
             feedback_prompt = f"""
             Resume: {st.session_state.resume_summary}
             Question: {current_q}
             Answer: {answer}
 
-            Please provide professional interview feedback including:
+            Provide interview feedback including:
             1. Clarity and completeness
             2. Structure and logic (e.g., STAR)
             3. Product/domain insight
